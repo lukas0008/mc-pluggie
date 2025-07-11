@@ -1,0 +1,19 @@
+[package]
+name = "mc-network"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+init = []
+
+[dependencies]
+abi_stable = "0.11.3"
+pluggie = { path = "../../pluggie/pluggie" }
+mc-tick = { path = "../mc-tick", default-features = false, features = [] }
+oneshot = "0.1.11"
+mc-protocol = { path = "../mc-protocol", default-features = false, features = [
+] }
+mio = { version = "1.0.4", features = ["net", "os-poll"] }

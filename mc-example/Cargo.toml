@@ -1,0 +1,15 @@
+[package]
+name = "mc-example"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+init = []
+
+[dependencies]
+pluggie = { path = "../../pluggie/pluggie" }
+mc-tick = { path = "../mc-tick", default-features = false, features = [] }
+mc-network = { path = "../mc-network", default-features = false, features = [] }

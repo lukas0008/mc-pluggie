@@ -1,0 +1,15 @@
+[package]
+name = "mc-tick"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+init = []
+
+[dependencies]
+abi_stable = "0.11.3"
+pluggie = { path = "../../pluggie/pluggie" }
+spin_sleep = "1.3.2"
