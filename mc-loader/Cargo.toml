@@ -1,5 +1,5 @@
 [package]
-name = "mc-network"
+name = "mc-loader"
 version = "0.1.0"
 edition = "2024"
 
@@ -10,9 +10,6 @@ crate-type = ["cdylib", "rlib"]
 init = []
 
 [dependencies]
-abi_stable = "0.11.3"
 pluggie = { path = "../../pluggie/pluggie" }
 mc-tick = { path = "../mc-tick", default-features = false, features = [] }
-oneshot = "0.1.11"
-mclib-protocol = { path = "../mclib-protocol" }
-mio = { version = "1.0.4", features = ["net", "os-poll"] }
+mc-network = { path = "../mc-network", default-features = false, features = [] }

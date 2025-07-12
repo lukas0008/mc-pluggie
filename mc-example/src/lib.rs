@@ -2,7 +2,7 @@
 
 use std::ops::Deref;
 
-use mc_network::{NewConnectionEvent, network_context::NetworkContext};
+use mc_network::{events::NewConnectionEvent, network_context::NetworkContext};
 use mc_tick::TickEvent;
 use pluggie::{
     AllLoadedEvent, describe_plugin, event_ref::EventRef, pluggie_context::PluggieCtx,

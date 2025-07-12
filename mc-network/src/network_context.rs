@@ -7,7 +7,12 @@ use abi_stable::external_types::crossbeam_channel::RSender;
 use mio::Waker;
 use pluggie::exposable::Exposable;
 
-use crate::{ClientId, NetworkTask};
+use crate::ClientId;
+
+#[derive(Debug)]
+pub(crate) enum NetworkTask {
+    SendPacket(ClientId, Vec<u8>),
+}
 
 #[repr(C)]
 pub(crate) struct NetworkContextInternal {

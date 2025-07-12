@@ -6,6 +6,9 @@ edition = "2021"
 [lib]
 proc-macro = true
 
+[features]
+serde-derive = []
+
 [dependencies]
 heck = "0.5"
 proc-macro-error2 = "2.0.1"

@@ -1,21 +1,21 @@
 #![feature(duration_millis_float)]
+mod client;
 pub mod client_id;
+pub mod events;
 pub mod network_context;
 pub mod network_loop;
 
-use std::{
-    net::SocketAddr,
-    sync::{Arc, Mutex},
-};
+use std::sync::{Arc, Mutex};
 
 use mio::Waker;
 use pluggie::{
-    AllLoadedEvent, curry::curry_once, describe_plugin, event::Event, event_ref::EventRef,
+    AllLoadedEvent, curry::curry_once, describe_plugin, event_ref::EventRef,
     pluggie_context::PluggieCtx, plugin::PluginInfo,
 };
 
 use crate::{
     client_id::ClientId,
+    events::{NewConnectionEvent, RawPacketEvent},
     network_context::{NetworkContext, NetworkContextInternal},
     network_loop::network_loop,
 };
@@ -33,25 +33,6 @@ describe_plugin!(
 const WAKE_TOKEN: mio::Token = mio::Token(0);
 const SERVER_TOKEN: mio::Token = mio::Token(1);
 
-#[derive(Debug)]
-pub(crate) enum NetworkTask {
-    SendPacket(ClientId, Vec<u8>),
-}
-
-#[derive(Debug)]
-struct Client {
-    conn: mio::net::TcpStream,
-    #[expect(unused)]
-    addr: SocketAddr,
-    currently_writable: bool,
-    to_write: Vec<u8>,
-}
-
-pub struct NewConnectionEvent(pub ClientId);
-impl Event for NewConnectionEvent {
-    const NAME: &'static str = "core:mc-network:new-connection";
-}
-
 fn init(ctx: PluggieCtx) {
     // let connections = Arc::new(Mutex::new(HashMap::new()));
     let poll = mio::Poll::new().unwrap();
@@ -67,13 +48,19 @@ fn init(ctx: PluggieCtx) {
         waker: waker.clone(),
         yo: 69,
     })));
-    let event_sender = ctx.register_event::<NewConnectionEvent>();
+    let new_connection_sender = ctx.register_event::<NewConnectionEvent>();
+    let raw_packet_sender = ctx.register_event::<RawPacketEvent>();
+    ctx.subscribe(|ev: EventRef<RawPacketEvent>| {
+        ev.ctx.info("Raw packet received");
+        println!("data in ascii: {}", String::from_utf8_lossy(&ev.data));
+    });
     // net_ctx.send_raw_packet(client_id, packet);
     ctx.expose(net_ctx.clone());
     std::thread::spawn(curry_once(network_loop)((
         ctx,
         poll,
         task_receiver,
-        event_sender,
+        new_connection_sender,
+        raw_packet_sender,
     )));
 }

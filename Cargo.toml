@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["mc-network", "mc-tick", "mc-protocol", "mc-proc", "mc-example"]
+members = ["mc-network", "mc-tick", "mc-proc", "mc-example", "mc-loader", "mclib-protocol", "tcp-test"]
 
-# [profile.release]
-# debug = true
+[profile.release]
+debug = true
