@@ -1,9 +1,9 @@
 use std::net::SocketAddr;
 
-use mclib_protocol::parse_varint;
+use mclib_protocol::varint::Varint;
 use pluggie::pluggie_context::EventSender;
 
-use crate::{client_id::ClientId, events::RawPacketEvent};
+use crate::{client_id::ClientId, client_mode::ClientMode, events::RawPacketEvent};
 
 #[derive(Debug)]
 pub struct Client {
@@ -14,7 +14,7 @@ pub struct Client {
     pub currently_writable: bool,
     pub to_write: Vec<u8>,
     pub read_buffer: Vec<u8>,
-    pub read_buffer_bytes: usize,
+    pub mode: ClientMode,
 }
 
 impl Client {
@@ -27,23 +27,27 @@ impl Client {
         self.read_buffer.extend_from_slice(bytes);
 
         loop {
-            let (len, bytes_used_on_varint) = if let Some(v) = parse_varint(&self.read_buffer) {
+            let (len, bytes_used_on_varint) = if let Some(v) = Varint::parse(&self.read_buffer) {
                 v
             } else {
                 return;
             };
 
-            let total_bytes_used = bytes_used_on_varint as usize + len as usize;
+            let total_bytes_used = bytes_used_on_varint as usize + len.0 as usize;
 
             if total_bytes_used > self.read_buffer.len() {
                 return;
             }
 
             let _ = self.read_buffer.drain(..bytes_used_on_varint as usize);
-            let data = self.read_buffer.drain(..len as usize).collect::<Vec<u8>>();
+            let data = self
+                .read_buffer
+                .drain(..len.0 as usize)
+                .collect::<Vec<u8>>();
             raw_packet_event_sender.call(&RawPacketEvent {
                 client_id: self.id,
                 data,
+                client_mode: self.mode,
             });
         }
     }

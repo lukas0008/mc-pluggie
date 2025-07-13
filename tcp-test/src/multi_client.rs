@@ -1,6 +1,4 @@
-use std::time::Duration;
-
-use tokio::{io::AsyncWriteExt, net::TcpStream};
+use tokio::{io::AsyncWriteExt, net::TcpStream, time::sleep, time::Duration};
 
 #[tokio::main]
 async fn main() {
@@ -27,7 +25,7 @@ async fn main() {
                     println!("Client {} sent handshake packet", i);
 
                     // Keep connection alive for a bit
-                    tokio::time::sleep(Duration::from_secs(3)).await;
+                    sleep(Duration::from_secs(3)).await;
 
                     // Send another packet
                     let packet2 = vec![5u8, 2, 0, 0, 0];
@@ -39,7 +37,7 @@ async fn main() {
                     println!("Client {} sent second packet", i);
 
                     // Keep connection alive a bit longer
-                    tokio::time::sleep(Duration::from_secs(2)).await;
+                    sleep(Duration::from_secs(2)).await;
 
                     println!("Client {} disconnecting", i);
                 }
@@ -52,7 +50,7 @@ async fn main() {
         handles.push(handle);
 
         // Small delay between connection attempts
-        tokio::time::sleep(Duration::from_millis(100)).await;
+        sleep(Duration::from_millis(100)).await;
     }
 
     // Wait for all clients to finish

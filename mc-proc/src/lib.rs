@@ -50,7 +50,7 @@ pub fn packet(
 
     #[cfg(feature = "serde-derive")]
     let code = quote! {
-        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(serde::Serialize, serde::Deserialize, Debug)]
         #item
         impl #impl_generics crate::packet::Packet for #name #ty_generics {
             const PACKET_ID: i32 = #id;
@@ -59,6 +59,7 @@ pub fn packet(
 
     #[cfg(not(feature = "serde-derive"))]
     let code = quote! {
+        #[derive(Debug)]
         #item
         impl #impl_generics crate::packet::Packet for #name #ty_generics {
             const PACKET_ID: i32 = #id;

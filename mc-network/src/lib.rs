@@ -1,12 +1,22 @@
 #![feature(duration_millis_float)]
 mod client;
 pub mod client_id;
+pub mod client_mode;
 pub mod events;
 pub mod network_context;
 pub mod network_loop;
 
 use std::sync::{Arc, Mutex};
 
+use mclib_protocol::{
+    Packet, SPacket,
+    packet_parsing::get_unparsed_packet_uncompressed,
+    serde::deserializer::DeserializePacket,
+    server::{
+        handshake::SHandshakePacket,
+        status::{SPingRequest, SStatusPacket},
+    },
+};
 use mio::Waker;
 use pluggie::{
     AllLoadedEvent, curry::curry_once, describe_plugin, event_ref::EventRef,
@@ -15,6 +25,7 @@ use pluggie::{
 
 use crate::{
     client_id::ClientId,
+    client_mode::ClientMode,
     events::{NewConnectionEvent, RawPacketEvent},
     network_context::{NetworkContext, NetworkContextInternal},
     network_loop::network_loop,
@@ -52,7 +63,35 @@ fn init(ctx: PluggieCtx) {
     let raw_packet_sender = ctx.register_event::<RawPacketEvent>();
     ctx.subscribe(|ev: EventRef<RawPacketEvent>| {
         ev.ctx.info("Raw packet received");
-        println!("data in ascii: {}", String::from_utf8_lossy(&ev.data));
+        ev.ctx.info(&format!("data: {:?}", &ev.data));
+
+        let (packet_type, payload) = get_unparsed_packet_uncompressed(&ev.data).unwrap();
+
+        macro_rules! match_packets {
+            ($mode: ident, $( $packet: ident),*) => { paste::paste! {
+
+                match packet_type {
+                    $(
+                        $packet::PACKET_ID => Some(
+                            mclib_protocol::SPacket::$mode( [<S $mode Packet>] :: $packet ( [<$packet>] ::deserialize_packet(&payload).unwrap())
+                        )),
+                    )*
+                    _ => None,
+                }
+                }
+            }
+        }
+
+        let packet = match ev.client_mode {
+            ClientMode::Handshake => if SHandshakePacket::PACKET_ID == packet_type {
+                Some(SPacket::Handshake(SHandshakePacket::deserialize_packet(&payload).unwrap()))
+            } else {
+                None
+            },
+            ClientMode::Status => match_packets!(Status, SPingRequest),
+            _ => None,
+        };
+        dbg!(packet);
     });
     // net_ctx.send_raw_packet(client_id, packet);
     ctx.expose(net_ctx.clone());

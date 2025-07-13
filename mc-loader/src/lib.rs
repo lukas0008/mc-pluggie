@@ -10,6 +10,4 @@ describe_plugin!(
     }
 );
 
-fn init(ctx: PluggieCtx) {
-    
-}
+fn init(_ctx: PluggieCtx) {}

@@ -24,10 +24,10 @@ fn init(ctx: PluggieCtx) {
     ctx.subscribe(move |ev: EventRef<TickEvent>| {
         let elapsed = start.elapsed();
         if (ev.tick + 1) % 50 == 0 {
-            ev.ctx.info(&format!(
-                "Tps: {:.4}",
-                ev.tick as f64 / elapsed.as_millis_f64() * 1000.
-            ));
+            // ev.ctx.info(&format!(
+            //     "Tps: {:.4}",
+            //     ev.tick as f64 / elapsed.as_millis_f64() * 1000.
+            // ));
         }
     });
     ctx.subscribe(move |ev: EventRef<AllLoadedEvent>| {
