@@ -2,7 +2,7 @@ use std::{error::Error, fmt::Display};
 
 use serde::{Serialize, de::DeserializeOwned, ser};
 
-use crate::{Packet, varint_to_bytes};
+use crate::{Packet, varint::Varint};
 
 // pub trait SerializePacket: Packet + Serialize {
 //     fn serialize_packet(&self) -> Result<Vec<u8>, SerializerError>;
@@ -12,7 +12,7 @@ use crate::{Packet, varint_to_bytes};
 // }
 
 pub struct Serializer {
-    output: Vec<u8>,
+    pub output: Vec<u8>,
 }
 
 impl Serializer {
@@ -127,7 +127,7 @@ impl<'a> ser::Serializer for &'a mut Serializer {
         unimplemented!()
     }
     fn serialize_seq(self, _len: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
-        unimplemented!()
+        Ok(self)
     }
     fn serialize_some<T>(self, _value: &T) -> Result<Self::Ok, Self::Error>
     where
@@ -136,7 +136,7 @@ impl<'a> ser::Serializer for &'a mut Serializer {
         unimplemented!()
     }
     fn serialize_str(self, v: &str) -> Result<Self::Ok, Self::Error> {
-        self.output.extend(varint_to_bytes(v.len() as i32));
+        self.output.extend(Varint::new(v.len() as i32).to_bytes());
         self.output.extend(v.as_bytes());
         Ok(())
     }
@@ -157,7 +157,7 @@ impl<'a> ser::Serializer for &'a mut Serializer {
         unimplemented!()
     }
     fn serialize_tuple(self, _len: usize) -> Result<Self::SerializeTuple, Self::Error> {
-        unimplemented!()
+        Ok(self)
     }
     fn serialize_tuple_struct(
         self,
@@ -221,16 +221,16 @@ impl<'a> ser::SerializeSeq for &'a mut Serializer {
     type Error = SerializerError;
 
     // Serialize a single element of the sequence.
-    fn serialize_element<T>(&mut self, _value: &T) -> Result<(), Self::Error>
+    fn serialize_element<T>(&mut self, value: &T) -> Result<(), Self::Error>
     where
         T: ?Sized + Serialize,
     {
-        todo!()
+        value.serialize(&mut **self)
     }
 
     // Close the sequence.
     fn end(self) -> Result<(), Self::Error> {
-        todo!()
+        Ok(())
     }
 }
 
@@ -238,15 +238,15 @@ impl<'a> ser::SerializeTuple for &'a mut Serializer {
     type Ok = ();
     type Error = SerializerError;
 
-    fn serialize_element<T>(&mut self, _value: &T) -> Result<(), Self::Error>
+    fn serialize_element<T>(&mut self, value: &T) -> Result<(), Self::Error>
     where
         T: ?Sized + Serialize,
     {
-        todo!()
+        value.serialize(&mut **self)
     }
 
     fn end(self) -> Result<(), Self::Error> {
-        todo!()
+        Ok(())
     }
 }
 

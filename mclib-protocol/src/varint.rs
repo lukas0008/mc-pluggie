@@ -6,6 +6,12 @@ use serde::{
 #[derive(Debug)]
 pub struct Varint(pub i32);
 
+impl From<i32> for Varint {
+    fn from(value: i32) -> Self {
+        Varint(value)
+    }
+}
+
 impl Varint {
     pub fn new(value: i32) -> Self {
         Varint(value)
@@ -29,7 +35,31 @@ impl Varint {
 
         None
     }
-    pub fn to_bytes() {}
+    pub fn to_bytes(&self) -> Vec<u8> {
+        let mut value = self.0;
+        let mut bytes = Vec::new();
+
+        for _ in 0..5 {
+            const CONTINUE: u8 = 0b10000000;
+            const MASK: u8 = 0b01111111;
+
+            let byte = (value & MASK as i32) as u8;
+
+            value >>= 7;
+            if value > 0 {
+                bytes.push(byte | CONTINUE);
+            } else {
+                bytes.push(byte);
+                break;
+            }
+
+            if value == 0 {
+                break;
+            }
+        }
+
+        bytes
+    }
 }
 
 impl Serialize for Varint {

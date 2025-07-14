@@ -212,7 +212,11 @@ impl<'a, 'de> de::Deserializer<'de> for Deserializer<'a> {
     where
         V: de::Visitor<'de>,
     {
-        let varint_range = self.inner.range(..5).map(Clone::clone).collect::<Vec<_>>();
+        let varint_range = self
+            .inner
+            .range(..5.min(self.inner.len()))
+            .map(Clone::clone)
+            .collect::<Vec<_>>();
         let (len, bytes_used) = Varint::parse(varint_range.as_slice()).unwrap();
         let _ = self.inner.drain(..bytes_used as usize);
         let string_range = self.inner.drain(..len.0 as usize).collect::<Vec<_>>();
@@ -220,14 +224,14 @@ impl<'a, 'de> de::Deserializer<'de> for Deserializer<'a> {
         visitor.visit_string(string)
     }
 
-    fn deserialize_bytes<V>(self, visitor: V) -> Result<V::Value, Self::Error>
+    fn deserialize_bytes<V>(self, _visitor: V) -> Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
     {
         unimplemented!()
     }
 
-    fn deserialize_byte_buf<V>(self, visitor: V) -> Result<V::Value, Self::Error>
+    fn deserialize_byte_buf<V>(self, _visitor: V) -> Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
     {
@@ -238,10 +242,15 @@ impl<'a, 'de> de::Deserializer<'de> for Deserializer<'a> {
     where
         V: de::Visitor<'de>,
     {
-        unimplemented!()
+        let present = self.inner.pop_front().unwrap_or(0);
+        if present != 0 {
+            visitor.visit_some(Deserializer { inner: self.inner })
+        } else {
+            visitor.visit_none()
+        }
     }
 
-    fn deserialize_unit<V>(self, visitor: V) -> Result<V::Value, Self::Error>
+    fn deserialize_unit<V>(self, _visitor: V) -> Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
     {
@@ -250,8 +259,8 @@ impl<'a, 'de> de::Deserializer<'de> for Deserializer<'a> {
 
     fn deserialize_unit_struct<V>(
         self,
-        name: &'static str,
-        visitor: V,
+        _name: &'static str,
+        _visitor: V,
     ) -> Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
@@ -261,8 +270,8 @@ impl<'a, 'de> de::Deserializer<'de> for Deserializer<'a> {
 
     fn deserialize_newtype_struct<V>(
         self,
-        name: &'static str,
-        visitor: V,
+        _name: &'static str,
+        _visitor: V,
     ) -> Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
@@ -362,7 +371,7 @@ impl<'a, 'de> de::Deserializer<'de> for Deserializer<'a> {
 
     fn deserialize_struct<V>(
         self,
-        name: &'static str,
+        _name: &'static str,
         fields: &'static [&'static str],
         visitor: V,
     ) -> Result<V::Value, Self::Error>
@@ -374,9 +383,9 @@ impl<'a, 'de> de::Deserializer<'de> for Deserializer<'a> {
 
     fn deserialize_enum<V>(
         self,
-        name: &'static str,
-        variants: &'static [&'static str],
-        visitor: V,
+        _name: &'static str,
+        _variants: &'static [&'static str],
+        _visitor: V,
     ) -> Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
@@ -384,14 +393,14 @@ impl<'a, 'de> de::Deserializer<'de> for Deserializer<'a> {
         unimplemented!()
     }
 
-    fn deserialize_identifier<V>(self, visitor: V) -> Result<V::Value, Self::Error>
+    fn deserialize_identifier<V>(self, _visitor: V) -> Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
     {
         unimplemented!()
     }
 
-    fn deserialize_ignored_any<V>(self, visitor: V) -> Result<V::Value, Self::Error>
+    fn deserialize_ignored_any<V>(self, _visitor: V) -> Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
     {

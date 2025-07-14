@@ -2,19 +2,23 @@
 mod client;
 pub mod client_id;
 pub mod client_mode;
+mod define_network_context;
 pub mod events;
 pub mod network_context;
 pub mod network_loop;
 
 use std::sync::{Arc, Mutex};
 
+use dashmap::DashMap;
 use mclib_protocol::{
     Packet, SPacket,
     packet_parsing::get_unparsed_packet_uncompressed,
     serde::deserializer::DeserializePacket,
     server::{
+        config::{SConfigFinishAcknowledged, SConfigPacket},
         handshake::SHandshakePacket,
-        status::{SPingRequest, SStatusPacket},
+        login::{SLoginAcknowledged, SLoginPacket, SLoginStart},
+        status::{SPingRequest, SStatusPacket, SStatusRequest},
     },
 };
 use mio::Waker;
@@ -24,10 +28,14 @@ use pluggie::{
 };
 
 use crate::{
+    client::Client,
     client_id::ClientId,
     client_mode::ClientMode,
-    events::{NewConnectionEvent, RawPacketEvent},
-    network_context::{NetworkContext, NetworkContextInternal},
+    define_network_context::defined_network_context,
+    events::{NewConnectionEvent, RawPacketEvent, ServerPacketEvent},
+    network_context::{
+        NetworkContext, NetworkContextFuncs, NetworkContextImplementation, NetworkContextInternal,
+    },
     network_loop::network_loop,
 };
 
@@ -54,17 +62,17 @@ fn init(ctx: PluggieCtx) {
     ctx.subscribe(|ev: EventRef<AllLoadedEvent>| {
         ev.ctx.info("All loaded");
     });
-    let net_ctx = NetworkContext(Arc::new(Mutex::new(NetworkContextInternal {
+    let connections: Arc<DashMap<mio::Token, Client>> = Arc::new(DashMap::new());
+    let net_ctx_impl = NetworkContextImplementation(Arc::new(Mutex::new(NetworkContextInternal {
         task_sender,
         waker: waker.clone(),
-        yo: 69,
+        connections: connections.clone(),
     })));
+    let net_ctx = defined_network_context(net_ctx_impl);
     let new_connection_sender = ctx.register_event::<NewConnectionEvent>();
     let raw_packet_sender = ctx.register_event::<RawPacketEvent>();
-    ctx.subscribe(|ev: EventRef<RawPacketEvent>| {
-        ev.ctx.info("Raw packet received");
-        ev.ctx.info(&format!("data: {:?}", &ev.data));
-
+    let server_packet_sender = ctx.register_event::<ServerPacketEvent>();
+    ctx.subscribe(move |ev: EventRef<RawPacketEvent>| {
         let (packet_type, payload) = get_unparsed_packet_uncompressed(&ev.data).unwrap();
 
         macro_rules! match_packets {
@@ -82,18 +90,26 @@ fn init(ctx: PluggieCtx) {
             }
         }
 
+        dbg!(packet_type);
         let packet = match ev.client_mode {
             ClientMode::Handshake => if SHandshakePacket::PACKET_ID == packet_type {
                 Some(SPacket::Handshake(SHandshakePacket::deserialize_packet(&payload).unwrap()))
             } else {
                 None
             },
-            ClientMode::Status => match_packets!(Status, SPingRequest),
+            ClientMode::Status => match_packets!(Status, SPingRequest, SStatusRequest),
+            ClientMode::Login => match_packets!(Login, SLoginStart, SLoginAcknowledged),
+            ClientMode::Config => match_packets!(Config, SConfigFinishAcknowledged),
             _ => None,
         };
-        dbg!(packet);
+
+        if let Some(packet) = packet {
+            server_packet_sender.call(&ServerPacketEvent { client_id: ev.client_id, packet: packet });
+        } else {
+            ev.ctx.error(&format!("packet dont work: {:?} {:#x}", ev.client_mode, packet_type));
+        }
     });
-    // net_ctx.send_raw_packet(client_id, packet);
+
     ctx.expose(net_ctx.clone());
     std::thread::spawn(curry_once(network_loop)((
         ctx,
@@ -101,5 +117,6 @@ fn init(ctx: PluggieCtx) {
         task_receiver,
         new_connection_sender,
         raw_packet_sender,
+        connections,
     )));
 }

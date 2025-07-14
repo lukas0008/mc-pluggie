@@ -1,3 +1,4 @@
+use mclib_protocol::SPacket;
 use pluggie::event::Event;
 
 use crate::{client_id::ClientId, client_mode::ClientMode};
@@ -16,4 +17,15 @@ pub struct RawPacketEvent {
 }
 impl Event for RawPacketEvent {
     const NAME: &'static str = "core:mc-network:raw-packet";
+}
+
+#[derive(Debug)]
+#[repr(C)]
+pub struct ServerPacketEvent {
+    pub client_id: ClientId,
+    pub packet: SPacket,
+}
+
+impl Event for ServerPacketEvent {
+    const NAME: &'static str = "core:mc-network:server-packet";
 }

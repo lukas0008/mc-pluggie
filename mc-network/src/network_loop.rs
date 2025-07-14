@@ -1,9 +1,11 @@
 use std::{
     collections::HashMap,
     io::{Read, Write},
+    sync::Arc,
 };
 
 use abi_stable::external_types::crossbeam_channel::RReceiver;
+use dashmap::DashMap;
 use pluggie::pluggie_context::{EventSender, PluggieCtx};
 
 use crate::{
@@ -16,12 +18,13 @@ use crate::{
 };
 
 pub(crate) fn network_loop(
-    (ctx, mut poll, task_receiver, new_connection, raw_packet): (
+    (ctx, mut poll, task_receiver, new_connection, raw_packet, connections): (
         PluggieCtx,
         mio::Poll,
         RReceiver<NetworkTask>,
         EventSender<NewConnectionEvent>,
         EventSender<RawPacketEvent>,
+        Arc<DashMap<mio::Token, Client>>,
     ),
 ) {
     let mut events = mio::Events::with_capacity(128);
@@ -32,34 +35,46 @@ pub(crate) fn network_loop(
         .register(&mut server, SERVER_TOKEN, mio::Interest::READABLE)
         .unwrap();
 
-    let mut connections: HashMap<mio::Token, Client> = HashMap::new();
     let mut conn_id = 2usize;
 
     ctx.info(&format!("Listening on {}", addr));
     loop {
         poll.poll(&mut events, None).unwrap(); // Blocks until an event occurs
 
-        for event in events.iter() {
-            match event.token() {
-                WAKE_TOKEN => {
-                    while let Ok(task) = task_receiver.try_recv() {
-                        match task {
-                            NetworkTask::SendPacket(client_id, mut data) => {
-                                if let Some(client) = connections.get_mut(&client_id.as_token()) {
-                                    client.to_write.append(&mut data);
-                                    if client.currently_writable {
-                                        let written = client.conn.write(&client.to_write).unwrap();
-                                        client.to_write.drain(..written);
-                                        client.currently_writable = false;
-                                    }
-                                }
+        let wake = || {
+            while let Ok(task) = task_receiver.try_recv() {
+                match task {
+                    NetworkTask::SendPacket(client_id, mut data) => {
+                        if let Some(mut client) = connections.get_mut(&client_id.as_token()) {
+                            // dbg!("sending: ", String::from_utf8_lossy(&data));
+                            client.to_write.append(&mut data);
+                            if client.currently_writable {
+                                client.conn.nodelay().unwrap();
+                                let client = &mut *client;
+                                let written = client.conn.write(&client.to_write).unwrap();
+                                client.to_write.drain(..written);
+                                client.currently_writable = false;
                             }
                         }
                     }
+                    NetworkTask::CloseClient(client_id) => {
+                        dbg!();
+                        if let Some(mut client) = connections.get_mut(&client_id.as_token()) {
+                            client.conn.shutdown(std::net::Shutdown::Both).unwrap();
+                            poll.registry().deregister(&mut client.conn).unwrap();
+                            ctx.info(&format!("Client {} closed", client_id));
+                        }
+                        connections.remove(&client_id.as_token());
+                    }
+                }
+            }
+        };
+        for event in events.iter() {
+            match event.token() {
+                WAKE_TOKEN => {
+                    wake();
                 }
                 SERVER_TOKEN => loop {
-                    let id = conn_id;
-                    conn_id += 1;
                     let (mut conn, addr) = match server.accept().map_err(|e| (e.kind(), e)) {
                         Ok(v) => v,
                         Err((std::io::ErrorKind::WouldBlock, _)) => break,
@@ -68,7 +83,10 @@ pub(crate) fn network_loop(
                             continue;
                         }
                     };
+                    let id = conn_id;
+                    conn_id += 1;
                     ctx.info(&format!("Accepted connection {}", id));
+                    conn.nodelay().unwrap();
                     poll.registry()
                         .register(
                             &mut conn,
@@ -91,16 +109,39 @@ pub(crate) fn network_loop(
                     new_connection.call(&NewConnectionEvent(ClientId(id)));
                 },
                 token => {
-                    if let Some(client) = connections.get_mut(&token) {
+                    let mut raw_packet_events = Vec::new();
+                    if let Some(mut client) = connections.get_mut(&token) {
                         if event.is_readable() {
-                            let mut byte_buf = [0; 4096];
-                            let bytes_read = client.conn.read(&mut byte_buf).unwrap();
-                            if bytes_read == 0 {
-                                continue;
+                            loop {
+                                let mut byte_buf = [0; 4096];
+                                let bytes_read = match client
+                                    .conn
+                                    .read(&mut byte_buf)
+                                    .map_err(|e| (e.kind(), e))
+                                {
+                                    Ok(bytes_read) => bytes_read,
+                                    Err((std::io::ErrorKind::WouldBlock, _)) => {
+                                        break;
+                                    }
+                                    Err((_, err)) => {
+                                        ctx.error(&format!(
+                                            "Error reading from client {}: {}",
+                                            client.id, err
+                                        ));
+                                        break;
+                                    }
+                                };
+                                if bytes_read == 0 {
+                                    break;
+                                }
+                                let events = client.update_received_bytes(&byte_buf[..bytes_read]);
+                                raw_packet_events.extend(events);
                             }
-                            client.update_received_bytes(&byte_buf[..bytes_read], &raw_packet);
                         } else if event.is_writable() {
+                            client.conn.nodelay().unwrap();
+
                             if client.to_write.len() > 0 {
+                                let client = &mut *client;
                                 let written = client.conn.write(&client.to_write).unwrap();
                                 client.to_write.drain(..written);
                                 client.currently_writable = false;
@@ -108,6 +149,14 @@ pub(crate) fn network_loop(
                                 client.currently_writable = true;
                             }
                         }
+                    }
+                    for event in raw_packet_events {
+                        let mode = { connections.get(&token).unwrap().mode };
+                        raw_packet.call(&RawPacketEvent {
+                            client_id: ClientId(token.0),
+                            client_mode: mode,
+                            data: event,
+                        });
                     }
                 }
             }

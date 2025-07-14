@@ -4,9 +4,12 @@ pub use client::CPacket;
 pub use packet::Packet;
 pub use server::SPacket;
 pub mod packet_parsing;
+pub mod prefixed_array;
+#[cfg(feature = "serde")]
 pub mod serde;
 pub mod server;
 pub mod varint;
+pub mod property;
 
 // TODO: replace with varlong struct
 pub fn parse_varlong(bytes: &[u8]) -> Option<i64> {
@@ -24,28 +27,4 @@ pub fn parse_varlong(bytes: &[u8]) -> Option<i64> {
     }
 
     None
-}
-
-// TODO: replace with varint method
-fn varint_to_bytes(mut value: i32) -> Vec<u8> {
-    let mut bytes = Vec::new();
-
-    for _ in 0..5 {
-        const CONTINUE: u8 = 0b10000000;
-        const MASK: u8 = 0b01111111;
-
-        let mut byte = (value & MASK as i32) as u8;
-
-        value >>= 7;
-        if value > 0 {
-            byte |= CONTINUE;
-        }
-        bytes.push(byte);
-
-        if value == 0 {
-            break;
-        }
-    }
-
-    bytes
 }

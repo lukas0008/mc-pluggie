@@ -19,24 +19,21 @@ pub struct Client {
 
 impl Client {
     /// This function updates the internal read buffer with the given bytes, additionally it also parses the bytes to get RawPacket's, calling this function with an empty buffer will parse the bytes remaining in the buffer
-    pub fn update_received_bytes(
-        &mut self,
-        bytes: &[u8],
-        raw_packet_event_sender: &EventSender<RawPacketEvent>,
-    ) {
+    pub fn update_received_bytes(&mut self, bytes: &[u8]) -> Vec<Vec<u8>> {
         self.read_buffer.extend_from_slice(bytes);
 
+        let mut events = Vec::new();
         loop {
             let (len, bytes_used_on_varint) = if let Some(v) = Varint::parse(&self.read_buffer) {
                 v
             } else {
-                return;
+                return events;
             };
 
             let total_bytes_used = bytes_used_on_varint as usize + len.0 as usize;
 
             if total_bytes_used > self.read_buffer.len() {
-                return;
+                return events;
             }
 
             let _ = self.read_buffer.drain(..bytes_used_on_varint as usize);
@@ -44,11 +41,7 @@ impl Client {
                 .read_buffer
                 .drain(..len.0 as usize)
                 .collect::<Vec<u8>>();
-            raw_packet_event_sender.call(&RawPacketEvent {
-                client_id: self.id,
-                data,
-                client_mode: self.mode,
-            });
+            events.push(data);
         }
     }
 }

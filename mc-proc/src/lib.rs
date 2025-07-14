@@ -55,6 +55,17 @@ pub fn packet(
         impl #impl_generics crate::packet::Packet for #name #ty_generics {
             const PACKET_ID: i32 = #id;
         }
+        impl #impl_generics crate::packet::PacketSerialize for #name #ty_generics {
+            fn serialize_packet(&self) -> Vec<u8> {
+                use serde::Serialize;
+                let mut serializer = crate::serde::serializer::Serializer::new();
+                self.serialize(&mut serializer).expect("Error serializing packet");
+                serializer.output
+            }
+            fn packet_id(&self) -> i32 {
+                #id
+            }
+        }
     };
 
     #[cfg(not(feature = "serde-derive"))]

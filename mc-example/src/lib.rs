@@ -37,7 +37,7 @@ fn init(ctx: PluggieCtx) {
 
         ev.ctx.subscribe(move |ev: EventRef<NewConnectionEvent>| {
             ev.ctx.info("conn in example");
-            net_ctx.send_raw_packet(ev.deref().0, b"yogurt\0".to_vec());
+            // net_ctx.send_raw_packet(ev.deref().0, b"yogurt\0".to_vec());
         });
     });
 }
