@@ -124,16 +124,18 @@ impl<'a> ser::Serializer for &'a mut Serializer {
         unimplemented!()
     }
     fn serialize_none(self) -> Result<Self::Ok, Self::Error> {
-        unimplemented!()
+        self.output.push(0);
+        Ok(())
     }
     fn serialize_seq(self, _len: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
         Ok(self)
     }
-    fn serialize_some<T>(self, _value: &T) -> Result<Self::Ok, Self::Error>
+    fn serialize_some<T>(self, value: &T) -> Result<Self::Ok, Self::Error>
     where
         T: ?Sized + Serialize,
     {
-        unimplemented!()
+        self.output.push(1);
+        value.serialize(self)
     }
     fn serialize_str(self, v: &str) -> Result<Self::Ok, Self::Error> {
         self.output.extend(Varint::new(v.len() as i32).to_bytes());

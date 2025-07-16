@@ -7,7 +7,9 @@ edition = "2024"
 serde = ["dep:serde", "mc-proc/serde-derive"]
 
 [dependencies]
+fastnbt = "2.5.0"
 mc-proc = { path = "../mc-proc" }
 serde = { version = "1.0", features = ["derive"], optional = true }
 serde_repr = "0.1.20"
+simdnbt = "0.7.1"
 uuid = { version = "1.17.0", features = ["serde", "v3", "v4"] }

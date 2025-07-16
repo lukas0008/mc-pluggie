@@ -5,7 +5,7 @@ use std::{
 
 use abi_stable::external_types::crossbeam_channel::RSender;
 use dashmap::DashMap;
-use mclib_protocol::{CPacket, packet::PacketSerialize, varint::Varint};
+use mclib_protocol::{packet::PacketSerialize, varint::Varint};
 use mio::Waker;
 use pluggie::exposable::Exposable;
 
@@ -84,6 +84,14 @@ impl NetworkContextImplementation {
         let packet_payload = packet.serialize_packet();
         let mut data = Vec::with_capacity(packet_payload.len() + 4);
         let packet_id_bytes = Varint::new(packet.packet_id()).to_bytes();
+        println!(
+            "{}",
+            &packet_payload
+                .iter()
+                .map(|v| format!("{v:x}"))
+                .collect::<Vec<String>>()
+                .join("")
+        );
         data.extend(Varint::new((packet_payload.len() + packet_id_bytes.len()) as i32).to_bytes());
         data.extend(packet_id_bytes);
         data.extend(packet_payload);

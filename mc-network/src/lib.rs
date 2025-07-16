@@ -15,7 +15,7 @@ use mclib_protocol::{
     packet_parsing::get_unparsed_packet_uncompressed,
     serde::deserializer::DeserializePacket,
     server::{
-        config::{SConfigFinishAcknowledged, SConfigPacket},
+        config::{SConfigFinishAcknowledged, SConfigPacket, SKnownPacks},
         handshake::SHandshakePacket,
         login::{SLoginAcknowledged, SLoginPacket, SLoginStart},
         status::{SPingRequest, SStatusPacket, SStatusRequest},
@@ -33,9 +33,7 @@ use crate::{
     client_mode::ClientMode,
     define_network_context::defined_network_context,
     events::{NewConnectionEvent, RawPacketEvent, ServerPacketEvent},
-    network_context::{
-        NetworkContext, NetworkContextFuncs, NetworkContextImplementation, NetworkContextInternal,
-    },
+    network_context::{NetworkContextImplementation, NetworkContextInternal},
     network_loop::network_loop,
 };
 
@@ -99,7 +97,7 @@ fn init(ctx: PluggieCtx) {
             },
             ClientMode::Status => match_packets!(Status, SPingRequest, SStatusRequest),
             ClientMode::Login => match_packets!(Login, SLoginStart, SLoginAcknowledged),
-            ClientMode::Config => match_packets!(Config, SConfigFinishAcknowledged),
+            ClientMode::Config => match_packets!(Config, SKnownPacks, SConfigFinishAcknowledged),
             _ => None,
         };
 

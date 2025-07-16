@@ -1,27 +1,27 @@
 use mc_network::{
     client_mode::ClientMode, events::ServerPacketEvent, network_context::NetworkContext,
 };
+use mc_registry::SharedRegistry;
 use mclib_protocol::{
     SPacket,
     client::{
-        config::{CFinishConfig, CKnownPacks},
+        config::{CFinishConfig, CKnownPacks, CRegistryData},
         login::CLoginSuccess,
-        play::{CGameEvent, CSynchronizePlayerPosition},
-        status::{
-            CPingResponse, CStatusResponse,
-            status_response::{
-                StatusResponseDescription, StatusResponseJson, StatusResponsePlayers,
-                StatusResponseVersion,
-            },
-        },
+        play::CLoginPlay,
     },
-    server::{config::SConfigPacket, login::SLoginPacket, status::SStatusPacket},
+    server::{config::SConfigPacket, login::SLoginPacket},
 };
 use pluggie::{
     AllLoadedEvent, describe_plugin, event_ref::EventRef, pluggie_context::PluggieCtx,
     plugin::PluginInfo,
 };
+use simdnbt::owned::{Nbt, NbtCompound};
 use uuid::Uuid;
+
+mod registry;
+use registry::populate_registry;
+
+use crate::registry::{REGISTRY_PACKETS, populate_registry_packets};
 
 describe_plugin!(
     init,
@@ -34,6 +34,18 @@ describe_plugin!(
 );
 
 fn init(ctx: PluggieCtx) {
+    let shared_registry = ctx.get::<SharedRegistry>().expect("Registry not found");
+    {
+        ctx.info("Populating shared registry");
+        let mut lock = shared_registry.write().unwrap();
+        populate_registry(&mut *lock);
+    }
+
+    {
+        let lock = shared_registry.read().unwrap();
+        populate_registry_packets(&*lock);
+    }
+
     ctx.subscribe(|ev: EventRef<AllLoadedEvent>| {
         ev.ctx.info("All loaded");
     });
@@ -49,6 +61,7 @@ fn init(ctx: PluggieCtx) {
                     net_ctx.switch_client_mode(ev.client_id, ClientMode::Status);
                 }
                 2 => {
+                    ev.ctx.info("Switching to login mode");
                     net_ctx.switch_client_mode(ev.client_id, ClientMode::Login);
                 }
                 3 => {
@@ -75,6 +88,7 @@ fn init(ctx: PluggieCtx) {
                     );
                 }
                 SLoginPacket::SLoginAcknowledged(_) => {
+                    ev.ctx.info("Switching to config mode");
                     net_ctx.switch_client_mode(ev.client_id, ClientMode::Config);
                     net_ctx.send_packet(
                         ev.client_id,
@@ -87,37 +101,43 @@ fn init(ctx: PluggieCtx) {
                             .into(),
                         },
                     );
-                    net_ctx.send_packet(ev.client_id, &CFinishConfig {});
                 }
                 _ => {}
             },
             SPacket::Config(config_packet) => match config_packet {
-                SConfigPacket::SConfigFinishAcknowledged(_) => {
-                    net_ctx.switch_client_mode(ev.client_id, ClientMode::Play);
-                    net_ctx.send_packet(
-                        ev.client_id,
-                        &CGameEvent {
-                            event: 13,
-                            value: 0.,
-                        },
-                    );
-                    net_ctx.send_packet(
-                        ev.client_id,
-                        &CSynchronizePlayerPosition {
-                            tp_id: 0.into(),
-                            x: 0.0,
-                            y: 5000.0,
-                            z: 0.0,
-                            vel_x: 0.0,
-                            vel_y: 0.0,
-                            vel_z: 0.0,
-                            yaw: 0.0,
-                            pitch: 0.0,
-                            flags: 0,
-                        },
-                    );
+                SConfigPacket::SKnownPacks(known_packs) => {
+                    dbg!(known_packs);
+                    for packet in REGISTRY_PACKETS.get().unwrap() {
+                        net_ctx.send_packet(ev.client_id, packet);
+                    }
+                    net_ctx.send_packet(ev.client_id, &CFinishConfig {});
                 }
-                _ => {}
+                SConfigPacket::SConfigFinishAcknowledged(_) => {
+                    ev.ctx.info("Switching to play mode");
+                    net_ctx.switch_client_mode(ev.client_id, ClientMode::Play);
+                    // net_ctx.send_packet(
+                    //     ev.client_id,
+                    //     &CGameEvent {
+                    //         event: 13,
+                    //         value: 0.,
+                    //     },
+                    // );
+                    // net_ctx.send_packet(
+                    //     ev.client_id,
+                    //     &CSynchronizePlayerPosition {
+                    //         tp_id: 0.into(),
+                    //         x: 0.0,
+                    //         y: 1000.0,
+                    //         z: 0.0,
+                    //         vel_x: 0.0,
+                    //         vel_y: 0.0,
+                    //         vel_z: 0.0,
+                    //         yaw: 0.0,
+                    //         pitch: 0.0,
+                    //         flags: 0,
+                    //     },
+                    // );
+                } // _ => {}
             },
             _ => {}
         }

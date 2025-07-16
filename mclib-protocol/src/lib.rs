@@ -4,12 +4,14 @@ pub use client::CPacket;
 pub use packet::Packet;
 pub use server::SPacket;
 pub mod packet_parsing;
+pub mod position;
 pub mod prefixed_array;
+pub mod property;
 #[cfg(feature = "serde")]
 pub mod serde;
 pub mod server;
+pub mod unprefixed_array;
 pub mod varint;
-pub mod property;
 
 // TODO: replace with varlong struct
 pub fn parse_varlong(bytes: &[u8]) -> Option<i64> {

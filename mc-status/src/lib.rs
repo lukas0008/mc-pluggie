@@ -35,7 +35,7 @@ fn init(ctx: PluggieCtx) {
             .get::<NetworkContext>()
             .expect("NetworkContext not found");
         match &ev.packet {
-            SPacket::Status(status_packet) => match dbg!(status_packet) {
+            SPacket::Status(status_packet) => match status_packet {
                 SStatusPacket::SStatusRequest(_) => {
                     // dbg!("sending stuff");
                     let status = StatusResponseJson {

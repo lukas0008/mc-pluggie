@@ -1,9 +1,7 @@
 use std::net::SocketAddr;
 
+use crate::{client_id::ClientId, client_mode::ClientMode};
 use mclib_protocol::varint::Varint;
-use pluggie::pluggie_context::EventSender;
-
-use crate::{client_id::ClientId, client_mode::ClientMode, events::RawPacketEvent};
 
 #[derive(Debug)]
 pub struct Client {

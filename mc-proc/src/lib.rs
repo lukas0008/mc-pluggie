@@ -35,11 +35,18 @@ pub fn packet(
         .parse(input)
         .unwrap();
     let mut id = None;
+    let mut serialize_only = false;
     for property in input {
         match property.key.to_string().as_str() {
             "id" => {
                 id = Some(property.value);
             }
+            "serialize_only" => match property.value {
+                syn::Lit::Bool(syn::LitBool { value, span: _ }) => {
+                    serialize_only = value;
+                }
+                _ => panic!("Expected boolean value for 'serialize_only' property"),
+            },
             _ => panic!("Unknown property: {}", property.key),
         }
     }
@@ -49,8 +56,27 @@ pub fn packet(
     let item: TokenStream = item.into();
 
     #[cfg(feature = "serde-derive")]
+    let serialize = quote! { , serde::Serialize };
+    #[cfg(not(feature = "serde-derive"))]
+    let serialize = quote! {};
+    #[cfg(not(feature = "serde-derive"))]
+    let deserialize = quote! {};
+    #[cfg(feature = "serde-derive")]
+    let deserialize = {
+        if !serialize_only {
+            quote! { , serde::Deserialize }
+        } else {
+            quote! {}
+        }
+    };
+
+    let derive = quote! {
+        #[derive(Debug #serialize #deserialize)]
+    };
+
+    #[cfg(feature = "serde-derive")]
     let code = quote! {
-        #[derive(serde::Serialize, serde::Deserialize, Debug)]
+        #derive
         #item
         impl #impl_generics crate::packet::Packet for #name #ty_generics {
             const PACKET_ID: i32 = #id;
@@ -65,15 +91,6 @@ pub fn packet(
             fn packet_id(&self) -> i32 {
                 #id
             }
-        }
-    };
-
-    #[cfg(not(feature = "serde-derive"))]
-    let code = quote! {
-        #[derive(Debug)]
-        #item
-        impl #impl_generics crate::packet::Packet for #name #ty_generics {
-            const PACKET_ID: i32 = #id;
         }
     };
 

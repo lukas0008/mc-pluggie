@@ -12,4 +12,6 @@ tokio = { version = "1.46.1", features = [
     "time",
 ] }
 mclib-protocol = { path = "../mclib-protocol", features = ["serde"] }
+azalea = "0.13.0"
+anyhow = "1.0.98"
 # mc-loader = { path = "../mc-loader" }

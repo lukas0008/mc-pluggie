@@ -1,8 +1,6 @@
 #![feature(duration_millis_float)]
 
-use std::ops::Deref;
-
-use mc_network::{events::NewConnectionEvent, network_context::NetworkContext};
+use mc_network::events::NewConnectionEvent;
 use mc_tick::TickEvent;
 use pluggie::{
     AllLoadedEvent, describe_plugin, event_ref::EventRef, pluggie_context::PluggieCtx,
@@ -22,7 +20,7 @@ describe_plugin!(
 fn init(ctx: PluggieCtx) {
     let start = std::time::Instant::now();
     ctx.subscribe(move |ev: EventRef<TickEvent>| {
-        let elapsed = start.elapsed();
+        // let elapsed = start.elapsed();
         if (ev.tick + 1) % 50 == 0 {
             // ev.ctx.info(&format!(
             //     "Tps: {:.4}",
@@ -33,7 +31,7 @@ fn init(ctx: PluggieCtx) {
     ctx.subscribe(move |ev: EventRef<AllLoadedEvent>| {
         ev.ctx.info("All loaded");
 
-        let net_ctx: NetworkContext = ev.ctx.get().unwrap();
+        // let net_ctx: NetworkContext = ev.ctx.get().unwrap();
 
         ev.ctx.subscribe(move |ev: EventRef<NewConnectionEvent>| {
             ev.ctx.info("conn in example");

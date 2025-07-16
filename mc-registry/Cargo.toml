@@ -1,0 +1,18 @@
+[package]
+name = "mc-registry"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+init = []
+
+[dependencies]
+serde = "1.0.219"
+sha2-const = "0.1.2"
+simdnbt = "0.7.1"
+pluggie = { path = "../../pluggie/pluggie" }
+arc-swap = "1.7.1"
+serde-tuple-vec-map = "1.0.1"
