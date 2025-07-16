@@ -7,7 +7,7 @@ use mclib_protocol::{
     client::{
         config::{CFinishConfig, CKnownPacks, CRegistryData},
         login::CLoginSuccess,
-        play::CLoginPlay,
+        play::{CGameEvent, CLoginPlay, CSynchronizePlayerPosition},
     },
     server::{config::SConfigPacket, login::SLoginPacket},
 };
@@ -115,28 +115,28 @@ fn init(ctx: PluggieCtx) {
                 SConfigPacket::SConfigFinishAcknowledged(_) => {
                     ev.ctx.info("Switching to play mode");
                     net_ctx.switch_client_mode(ev.client_id, ClientMode::Play);
-                    // net_ctx.send_packet(
-                    //     ev.client_id,
-                    //     &CGameEvent {
-                    //         event: 13,
-                    //         value: 0.,
-                    //     },
-                    // );
-                    // net_ctx.send_packet(
-                    //     ev.client_id,
-                    //     &CSynchronizePlayerPosition {
-                    //         tp_id: 0.into(),
-                    //         x: 0.0,
-                    //         y: 1000.0,
-                    //         z: 0.0,
-                    //         vel_x: 0.0,
-                    //         vel_y: 0.0,
-                    //         vel_z: 0.0,
-                    //         yaw: 0.0,
-                    //         pitch: 0.0,
-                    //         flags: 0,
-                    //     },
-                    // );
+                    net_ctx.send_packet(
+                        ev.client_id,
+                        &CGameEvent {
+                            event: 13,
+                            value: 0.,
+                        },
+                    );
+                    net_ctx.send_packet(
+                        ev.client_id,
+                        &CSynchronizePlayerPosition {
+                            tp_id: 0.into(),
+                            x: 0.,
+                            y: 5000.,
+                            z: 0.,
+                            vel_x: 0.,
+                            vel_y: 0.,
+                            vel_z: 0.,
+                            yaw: 0.,
+                            pitch: 0.,
+                            flags: 0,
+                        },
+                    );
                 } // _ => {}
             },
             _ => {}

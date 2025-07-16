@@ -13,5 +13,5 @@ pub struct CSynchronizePlayerPosition {
     pub vel_z: f64,
     pub yaw: f32,
     pub pitch: f32,
-    pub flags: u32,
+    pub flags: i32,
 }

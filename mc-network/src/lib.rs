@@ -88,7 +88,7 @@ fn init(ctx: PluggieCtx) {
             }
         }
 
-        dbg!(packet_type);
+        // dbg!(packet_type);
         let packet = match ev.client_mode {
             ClientMode::Handshake => if SHandshakePacket::PACKET_ID == packet_type {
                 Some(SPacket::Handshake(SHandshakePacket::deserialize_packet(&payload).unwrap()))

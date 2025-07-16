@@ -1,28 +1,44 @@
 use std::{
     fmt::Debug,
     ops::Deref,
-    sync::{Arc, Mutex, RwLock, RwLockReadGuard},
+    sync::{Arc, RwLock},
 };
 
-use arc_swap::ArcSwap;
 use pluggie::{
-    describe_plugin, exposable::Exposable, pluggie_context::PluggieCtx, plugin::PluginInfo,
+    AllLoadedEvent, event_ref::EventRef, exposable::Exposable, pluggie_context::PluggieCtx,
 };
 
 use crate::registry::Registry;
 
+pub mod cat_variant;
+pub mod chicken_variant;
+pub mod cow_variant;
 pub mod dimension_type;
+pub mod frog_variant;
+pub mod painting_variant;
+pub mod pig_variant;
 pub mod registry;
+pub mod wolf_sound_variant;
+pub mod wolf_variant;
 
-describe_plugin!(
-    init,
-    PluginInfo {
-        name: "core:mc-registry".into(),
-        version: "0.1.0".into(),
-        author: "github.com:lukas0008".into(),
-        pluggie_version: pluggie::VERSION,
+pub extern "C" fn __pluggie_init(ctx: PluggieCtx) {
+    init(ctx);
+}
+
+#[unsafe(no_mangle)]
+#[cfg(feature = "init")]
+pub extern "C" fn pluggie_def() -> pluggie::plugin::PluginRef {
+    pluggie::plugin::PluginRef {
+        init: __pluggie_init,
+        plugin_info: pluggie::plugin::PluginInfo {
+            name: "core:mc-registry".into(),
+            version: "0.1.0".into(),
+            author: "github.com:lukas0008".into(),
+            pluggie_version: pluggie::VERSION,
+        },
+        load_early: true,
     }
-);
+}
 
 #[derive(Clone)]
 pub struct SharedRegistry(pub Arc<RwLock<Registry>>);
@@ -46,4 +62,8 @@ impl Exposable for SharedRegistry {
 fn init(ctx: PluggieCtx) {
     let shared = SharedRegistry(Arc::new(RwLock::new(Registry::new())));
     ctx.expose(shared);
+
+    ctx.subscribe(|ev: EventRef<AllLoadedEvent>| {
+        ev.ctx.info("All loaded");
+    });
 }

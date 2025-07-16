@@ -1,6 +1,7 @@
 mod game_event;
 mod login_play;
 mod synchronize_player_position;
+mod chunk_data_and_light;
 
 pub use game_event::CGameEvent;
 pub use login_play::CLoginPlay;
