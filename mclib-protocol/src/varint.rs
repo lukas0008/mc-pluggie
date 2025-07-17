@@ -3,7 +3,7 @@ use serde::{
     de::{SeqAccess, Visitor},
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Varint(pub i32);
 
 impl From<i32> for Varint {
