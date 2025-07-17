@@ -1,6 +1,8 @@
+use crate::biome::Biome;
 use crate::cat_variant::CatVariant;
 use crate::chicken_variant::ChickenVariant;
 use crate::cow_variant::CowVariant;
+use crate::damage_type::DamageType;
 use crate::dimension_type::DimensionType;
 use crate::frog_variant::FrogVariant;
 use crate::painting_variant::PaintingVariant;
@@ -10,6 +12,9 @@ use crate::wolf_variant::WolfVariant;
 
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
 pub struct Registry {
+    #[serde(rename = "worldgen/biome")]
+    #[serde(with = "tuple_vec_map")]
+    pub biomes: Vec<(String, Biome)>,
     #[serde(rename = "dimension_type")]
     #[serde(with = "tuple_vec_map")]
     pub dimension_types: Vec<(String, DimensionType)>,
@@ -37,11 +42,15 @@ pub struct Registry {
     #[serde(rename = "cat_variant")]
     #[serde(with = "tuple_vec_map")]
     pub cat_variants: Vec<(String, CatVariant)>,
+    #[serde(rename = "damage_type")]
+    #[serde(with = "tuple_vec_map")]
+    pub damage_types: Vec<(String, DamageType)>,
 }
 
 impl Registry {
     pub fn new() -> Self {
         Registry {
+            biomes: Vec::new(),
             dimension_types: Vec::new(),
             chicken_variants: Vec::new(),
             cow_variants: Vec::new(),
@@ -51,9 +60,11 @@ impl Registry {
             wolf_sound_variants: Vec::new(),
             wolf_variants: Vec::new(),
             cat_variants: Vec::new(),
+            damage_types: Vec::new(),
         }
     }
     pub fn extend(&mut self, other: Registry) {
+        self.biomes.extend(other.biomes);
         self.dimension_types.extend(other.dimension_types);
         self.chicken_variants.extend(other.chicken_variants);
         self.cow_variants.extend(other.cow_variants);
@@ -63,5 +74,6 @@ impl Registry {
         self.wolf_sound_variants.extend(other.wolf_sound_variants);
         self.wolf_variants.extend(other.wolf_variants);
         self.cat_variants.extend(other.cat_variants);
+        self.damage_types.extend(other.damage_types);
     }
 }

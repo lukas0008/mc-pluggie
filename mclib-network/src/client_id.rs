@@ -9,9 +9,3 @@ impl Display for ClientId {
         write!(f, "ClientId({})", self.0)
     }
 }
-
-impl ClientId {
-    pub(crate) fn as_token(&self) -> mio::Token {
-        mio::Token(self.0)
-    }
-}

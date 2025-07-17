@@ -14,6 +14,7 @@ pub enum CConfigPacket {
     CRegistryData(CRegistryData),
 }
 
+#[cfg(feature = "serde")]
 impl PacketSerialize for CConfigPacket {
     fn packet_id(&self) -> i32 {
         match self {

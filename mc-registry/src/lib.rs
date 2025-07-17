@@ -10,9 +10,11 @@ use pluggie::{
 
 use crate::registry::Registry;
 
+pub mod biome;
 pub mod cat_variant;
 pub mod chicken_variant;
 pub mod cow_variant;
+pub mod damage_type;
 pub mod dimension_type;
 pub mod frog_variant;
 pub mod painting_variant;

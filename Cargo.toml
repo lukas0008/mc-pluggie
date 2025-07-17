@@ -7,10 +7,15 @@ members = [
     "mc-example",
     "mc-loader",
     "mclib-protocol",
-    "tcp-test",
     "mc-status",
     "mc-registry",
+    "mc-keepalive", "mclib-network",
 ]
 
+[workspace.dependencies]
+# for some reason it has a 'derive' feature, but disabling it throws an error
+# simdnbt = { version = "0.7.1", default-features = false }
+simdnbt = "0.7.1"
+
 [profile.release]
-debug = true
+# debug = true

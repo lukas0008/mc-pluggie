@@ -1,8 +1,3 @@
-use serde::{
-    Deserialize, Deserializer, Serialize, Serializer,
-    de::{SeqAccess, Visitor},
-};
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Varint(pub i32);
 
@@ -62,6 +57,12 @@ impl Varint {
     }
 }
 
+#[cfg(feature = "serde")]
+use serde::{
+    Deserialize, Deserializer, Serialize, Serializer,
+    de::{SeqAccess, Visitor},
+};
+#[cfg(feature = "serde")]
 impl Serialize for Varint {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -92,6 +93,7 @@ impl Serialize for Varint {
     }
 }
 
+#[cfg(feature = "serde")]
 impl<'de> Deserialize<'de> for Varint {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where

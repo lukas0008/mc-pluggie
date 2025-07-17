@@ -1,6 +1,6 @@
 use std::net::SocketAddr;
 
-use crate::{client_id::ClientId, client_mode::ClientMode};
+use mclib_network::{ClientId, ClientMode};
 use mclib_protocol::varint::Varint;
 
 #[derive(Debug)]

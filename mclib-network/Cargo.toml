@@ -1,14 +1,11 @@
 [package]
-name = "mc-tick"
+name = "mclib-network"
 version = "0.1.0"
 edition = "2024"
 
 [lib]
-crate-type = ["cdylib", "rlib"]
-
-[features]
-init = []
+crate-type = ["rlib"]
 
 [dependencies]
 pluggie = { path = "../../pluggie/pluggie" }
-spin_sleep = "1.3.2"
+mclib-protocol = { path = "../mclib-protocol" }

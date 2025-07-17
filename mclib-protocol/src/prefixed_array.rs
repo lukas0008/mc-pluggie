@@ -1,11 +1,5 @@
 use std::marker::PhantomData;
 
-use serde::{
-    Deserialize, Serialize,
-    de::{SeqAccess, Visitor},
-    ser::SerializeSeq,
-};
-
 use crate::varint::Varint;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -17,6 +11,13 @@ impl<T> From<Vec<T>> for PrefixedArray<T> {
     }
 }
 
+#[cfg(feature = "serde")]
+use serde::{
+    Deserialize, Serialize,
+    de::{SeqAccess, Visitor},
+    ser::SerializeSeq,
+};
+#[cfg(feature = "serde")]
 impl<'de, T> Deserialize<'de> for PrefixedArray<T>
 where
     T: Deserialize<'de>,
@@ -53,6 +54,7 @@ where
     }
 }
 
+#[cfg(feature = "serde")]
 impl<T> Serialize for PrefixedArray<T>
 where
     T: Serialize,

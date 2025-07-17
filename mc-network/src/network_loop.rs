@@ -5,16 +5,10 @@ use std::{
 
 use abi_stable::external_types::crossbeam_channel::RReceiver;
 use dashmap::DashMap;
+use mclib_network::{ClientId, ClientMode, NewConnectionEvent, RawPacketEvent};
 use pluggie::pluggie_context::{EventSender, PluggieCtx};
 
-use crate::{
-    SERVER_TOKEN, WAKE_TOKEN,
-    client::Client,
-    client_id::ClientId,
-    client_mode::ClientMode,
-    events::{NewConnectionEvent, RawPacketEvent},
-    network_context::NetworkTask,
-};
+use crate::{SERVER_TOKEN, WAKE_TOKEN, client::Client, network_context::NetworkTask};
 
 pub(crate) fn network_loop(
     (ctx, mut poll, task_receiver, new_connection, raw_packet, connections): (
@@ -44,7 +38,7 @@ pub(crate) fn network_loop(
             while let Ok(task) = task_receiver.try_recv() {
                 match task {
                     NetworkTask::SendPacket(client_id, mut data) => {
-                        if let Some(mut client) = connections.get_mut(&client_id.as_token()) {
+                        if let Some(mut client) = connections.get_mut(&mio::Token(client_id.0)) {
                             // dbg!("sending: ", String::from_utf8_lossy(&data));
                             client.to_write.append(&mut data);
                             if client.currently_writable {
@@ -58,12 +52,12 @@ pub(crate) fn network_loop(
                     }
                     NetworkTask::CloseClient(client_id) => {
                         dbg!();
-                        if let Some(mut client) = connections.get_mut(&client_id.as_token()) {
+                        if let Some(mut client) = connections.get_mut(&mio::Token(client_id.0)) {
                             client.conn.shutdown(std::net::Shutdown::Both).unwrap();
                             poll.registry().deregister(&mut client.conn).unwrap();
                             ctx.info(&format!("Client {} closed", client_id));
                         }
-                        connections.remove(&client_id.as_token());
+                        connections.remove(&mio::Token(client_id.0));
                     }
                 }
             }

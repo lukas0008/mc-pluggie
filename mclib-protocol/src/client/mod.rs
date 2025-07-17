@@ -16,6 +16,7 @@ pub enum CPacket {
     Play(CPlayPacket),
 }
 
+#[cfg(feature = "serde")]
 impl PacketSerialize for CPacket {
     fn serialize_packet(&self) -> Vec<u8> {
         match self {

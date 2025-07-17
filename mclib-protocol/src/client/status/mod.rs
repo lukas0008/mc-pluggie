@@ -11,6 +11,7 @@ pub enum CStatusPacket {
     CStatusResponse(CStatusResponse),
 }
 
+#[cfg(feature = "serde")]
 impl PacketSerialize for CStatusPacket {
     fn serialize_packet(&self) -> Vec<u8> {
         match self {

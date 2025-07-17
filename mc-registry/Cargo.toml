@@ -12,7 +12,6 @@ init = []
 [dependencies]
 serde = "1.0.219"
 sha2-const = "0.1.2"
-simdnbt = "0.7.1"
+simdnbt.workspace = true
 pluggie = { path = "../../pluggie/pluggie" }
-arc-swap = "1.7.1"
 serde-tuple-vec-map = "1.0.1"

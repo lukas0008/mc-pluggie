@@ -10,10 +10,11 @@ crate-type = ["cdylib", "rlib"]
 init = []
 
 [dependencies]
-abi_stable = "0.11.3"
+abi_stable = { version = "0.11.3", default-features = false }
 pluggie = { path = "../../pluggie/pluggie" }
-oneshot = "0.1.11"
 mclib-protocol = { path = "../mclib-protocol", features = ["serde"] }
 mio = { version = "1.0.4", features = ["net", "os-poll"] }
 paste = "1.0.15"
 dashmap = "6.1.0"
+simdnbt.workspace = true
+mclib-network = { path = "../mclib-network" }

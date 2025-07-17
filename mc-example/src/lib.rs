@@ -1,7 +1,7 @@
 #![feature(duration_millis_float)]
 
-use mc_network::events::NewConnectionEvent;
 use mc_tick::TickEvent;
+use mclib_network::NewConnectionEvent;
 use pluggie::{
     AllLoadedEvent, describe_plugin, event_ref::EventRef, pluggie_context::PluggieCtx,
     plugin::PluginInfo,

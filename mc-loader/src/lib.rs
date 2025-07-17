@@ -1,11 +1,9 @@
-use mc_network::{
-    client_mode::ClientMode, events::ServerPacketEvent, network_context::NetworkContext,
-};
 use mc_registry::SharedRegistry;
+use mclib_network::{ClientMode, NetworkContext, ServerPacketEvent};
 use mclib_protocol::{
     SPacket,
     client::{
-        config::{CFinishConfig, CKnownPacks, CRegistryData},
+        config::{CFinishConfig, CKnownPacks},
         login::CLoginSuccess,
         play::{CGameEvent, CLoginPlay, CSynchronizePlayerPosition},
     },
@@ -15,7 +13,6 @@ use pluggie::{
     AllLoadedEvent, describe_plugin, event_ref::EventRef, pluggie_context::PluggieCtx,
     plugin::PluginInfo,
 };
-use simdnbt::owned::{Nbt, NbtCompound};
 use uuid::Uuid;
 
 mod registry;
@@ -101,8 +98,7 @@ fn init(ctx: PluggieCtx) {
                             .into(),
                         },
                     );
-                }
-                _ => {}
+                } // _ => {}
             },
             SPacket::Config(config_packet) => match config_packet {
                 SConfigPacket::SKnownPacks(known_packs) => {
@@ -115,6 +111,31 @@ fn init(ctx: PluggieCtx) {
                 SConfigPacket::SConfigFinishAcknowledged(_) => {
                     ev.ctx.info("Switching to play mode");
                     net_ctx.switch_client_mode(ev.client_id, ClientMode::Play);
+                    net_ctx.send_packet(
+                        ev.client_id,
+                        &CLoginPlay {
+                            dimension_name: "overworld".to_string(),
+                            death_location: None,
+                            dimension_type: 0.into(),
+                            dimensions: vec!["overworld".into()].into(),
+                            do_limited_crafting: false,
+                            enable_respawn_screen: true,
+                            enforces_secure_chat: true,
+                            entity_id: 0,
+                            game_mode: 1,
+                            hardcore: false,
+                            hashed_seed: 0,
+                            is_debug: false,
+                            is_flat: true,
+                            max_players: 20.into(),
+                            portal_cooldown: 0.into(),
+                            previous_game_mode: (-1).into(),
+                            reduced_debug_info: false,
+                            sea_level: 64.into(),
+                            simulation_distance: 10.into(),
+                            view_distance: 10.into(),
+                        },
+                    );
                     net_ctx.send_packet(
                         ev.client_id,
                         &CGameEvent {

@@ -1,6 +1,8 @@
 use std::sync::Arc;
 
-use crate::network_context::{NetworkContext, NetworkContextFuncs, NetworkContextImplementation};
+use mclib_network::{NetworkContext, NetworkContextFuncs};
+
+use crate::network_context::NetworkContextImplementation;
 
 pub fn defined_network_context(net_ctx_impl: NetworkContextImplementation) -> NetworkContext {
     let net_ctx_impl1 = net_ctx_impl.clone();

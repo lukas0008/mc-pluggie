@@ -75,6 +75,17 @@ pub fn packet(
     };
 
     #[cfg(feature = "serde-derive")]
+    let serialize_code = quote! {
+        use serde::Serialize;
+        let mut serializer = crate::serde::serializer::Serializer::new();
+        self.serialize(&mut serializer).expect("Error serializing packet");
+        serializer.output
+    };
+    #[cfg(not(feature = "serde-derive"))]
+    let serialize_code = quote! {
+        unimplemented!("Serialization not implemented, enable mclib-protocol/serde feature")
+    };
+
     let code = quote! {
         #derive
         #item
@@ -83,10 +94,7 @@ pub fn packet(
         }
         impl #impl_generics crate::packet::PacketSerialize for #name #ty_generics {
             fn serialize_packet(&self) -> Vec<u8> {
-                use serde::Serialize;
-                let mut serializer = crate::serde::serializer::Serializer::new();
-                self.serialize(&mut serializer).expect("Error serializing packet");
-                serializer.output
+                #serialize_code
             }
             fn packet_id(&self) -> i32 {
                 #id

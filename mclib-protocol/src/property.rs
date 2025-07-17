@@ -1,4 +1,5 @@
-#[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Property {
     pub name: String,
     pub value: String,

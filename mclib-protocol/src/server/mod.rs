@@ -1,9 +1,13 @@
-use crate::server::{config::SConfigPacket, handshake::SHandshakePacket, login::SLoginPacket, status::SStatusPacket};
+use crate::server::{
+    config::SConfigPacket, handshake::SHandshakePacket, login::SLoginPacket, play::SPlayPacket,
+    status::SStatusPacket,
+};
 
+pub mod config;
 pub mod handshake;
 pub mod login;
+pub mod play;
 pub mod status;
-pub mod config;
 
 #[derive(Debug)]
 pub enum SPacket {
@@ -11,4 +15,5 @@ pub enum SPacket {
     Handshake(SHandshakePacket),
     Login(SLoginPacket),
     Config(SConfigPacket),
+    Play(SPlayPacket),
 }

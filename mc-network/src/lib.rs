@@ -1,15 +1,13 @@
 #![feature(duration_millis_float)]
 mod client;
-pub mod client_id;
-pub mod client_mode;
 mod define_network_context;
-pub mod events;
 pub mod network_context;
 pub mod network_loop;
 
 use std::sync::{Arc, Mutex};
 
 use dashmap::DashMap;
+use mclib_network::{ClientMode, NewConnectionEvent, RawPacketEvent, ServerPacketEvent};
 use mclib_protocol::{
     Packet, SPacket,
     packet_parsing::get_unparsed_packet_uncompressed,
@@ -18,6 +16,7 @@ use mclib_protocol::{
         config::{SConfigFinishAcknowledged, SConfigPacket, SKnownPacks},
         handshake::SHandshakePacket,
         login::{SLoginAcknowledged, SLoginPacket, SLoginStart},
+        play::{SPlayPacket, SSetPlayerPos, SSetPlayerPosRot, STickEnd},
         status::{SPingRequest, SStatusPacket, SStatusRequest},
     },
 };
@@ -29,10 +28,7 @@ use pluggie::{
 
 use crate::{
     client::Client,
-    client_id::ClientId,
-    client_mode::ClientMode,
     define_network_context::defined_network_context,
-    events::{NewConnectionEvent, RawPacketEvent, ServerPacketEvent},
     network_context::{NetworkContextImplementation, NetworkContextInternal},
     network_loop::network_loop,
 };
@@ -98,7 +94,7 @@ fn init(ctx: PluggieCtx) {
             ClientMode::Status => match_packets!(Status, SPingRequest, SStatusRequest),
             ClientMode::Login => match_packets!(Login, SLoginStart, SLoginAcknowledged),
             ClientMode::Config => match_packets!(Config, SKnownPacks, SConfigFinishAcknowledged),
-            _ => None,
+            ClientMode::Play => match_packets!(Play, SSetPlayerPos, SSetPlayerPosRot, STickEnd),
         };
 
         if let Some(packet) = packet {

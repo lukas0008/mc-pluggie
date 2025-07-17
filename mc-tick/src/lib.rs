@@ -1,13 +1,12 @@
 #![feature(thread_sleep_until)]
 use std::sync::Arc;
 
-use abi_stable::StableAbi;
 use pluggie::{
     AllLoadedEvent, describe_plugin, event::Event, event_ref::EventRef,
     pluggie_context::PluggieCtx, plugin::PluginInfo,
 };
 
-#[derive(StableAbi, Clone)]
+#[derive(Clone)]
 #[repr(C)]
 pub struct TickEvent {
     pub tick: u64,

@@ -31,6 +31,11 @@ pub fn populate_registry_packets(registry: &Registry) {
     let mut packets = Vec::new();
 
     packets.push(CRegistryData {
+        registry_id: "minecraft:worldgen/biome".into(),
+        entries: do_stuff(&registry.biomes),
+    });
+
+    packets.push(CRegistryData {
         registry_id: "minecraft:dimension_type".into(),
         entries: do_stuff(
             &registry
@@ -83,6 +88,11 @@ pub fn populate_registry_packets(registry: &Registry) {
     packets.push(CRegistryData {
         registry_id: "minecraft:cat_variant".into(),
         entries: do_stuff(&registry.cat_variants),
+    });
+
+    packets.push(CRegistryData {
+        registry_id: "minecraft:damage_type".into(),
+        entries: do_stuff(&registry.damage_types),
     });
 
     let _ = REGISTRY_PACKETS.set(packets);

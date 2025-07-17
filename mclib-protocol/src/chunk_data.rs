@@ -1,6 +1,7 @@
 use crate::{heightmap::Heightmap, prefixed_array::PrefixedArray};
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
+#[derive(Debug, Clone)]
 pub struct ChunkData {
     pub heightmaps: PrefixedArray<Heightmap>,
     pub data: PrefixedArray<u8>,

@@ -8,6 +8,7 @@ pub enum CLoginPacket {
     CLoginSuccess(CLoginSuccess),
 }
 
+#[cfg(feature = "serde")]
 impl PacketSerialize for CLoginPacket {
     fn packet_id(&self) -> i32 {
         match self {

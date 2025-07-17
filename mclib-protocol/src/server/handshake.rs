@@ -10,7 +10,11 @@ pub struct SHandshakePacket {
     pub intent: Varint,
 }
 
-#[derive(serde_repr::Serialize_repr, serde_repr::Deserialize_repr, Debug)]
+#[cfg_attr(
+    feature = "serde",
+    derive(serde_repr::Serialize_repr, serde_repr::Deserialize_repr)
+)]
+#[derive(Debug)]
 #[repr(u8)]
 pub enum HandshakeIntent {
     Status = 1,

@@ -1,5 +1,3 @@
-use serde::{Serialize, ser::SerializeSeq};
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct UnprefixedArray<T>(pub Vec<T>);
 
@@ -9,6 +7,9 @@ impl<T> From<Vec<T>> for UnprefixedArray<T> {
     }
 }
 
+#[cfg(feature = "serde")]
+use serde::{Serialize, ser::SerializeSeq};
+#[cfg(feature = "serde")]
 impl<T> Serialize for UnprefixedArray<T>
 where
     T: Serialize,

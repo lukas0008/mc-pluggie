@@ -1,5 +1,5 @@
 [package]
-name = "mc-tick"
+name = "mc-keepalive"
 version = "0.1.0"
 edition = "2024"
 
@@ -11,4 +11,6 @@ init = []
 
 [dependencies]
 pluggie = { path = "../../pluggie/pluggie" }
-spin_sleep = "1.3.2"
+mclib-network = { path = "../mclib-network" }
+mc-tick = { path = "../mc-tick" }
+mclib-protocol = { path = "../mclib-protocol" }

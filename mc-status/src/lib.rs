@@ -1,4 +1,4 @@
-use mc_network::{events::ServerPacketEvent, network_context::NetworkContext};
+use mclib_network::{NetworkContext, ServerPacketEvent};
 use mclib_protocol::{
     SPacket,
     client::status::{
