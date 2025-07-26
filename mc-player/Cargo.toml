@@ -1,0 +1,8 @@
+[package]
+name = "mc-player"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+mclib-network = { path = "../mclib-network" }
+mclib-core = { path = "../mclib-core" }

@@ -9,7 +9,12 @@ members = [
     "mclib-protocol",
     "mc-status",
     "mc-registry",
-    "mc-keepalive", "mclib-network",
+    "mc-keepalive",
+    "mclib-network",
+    "mc-world",
+    "mclib-world",
+    "mclib-core",
+    "mc-player",
 ]
 
 [workspace.dependencies]

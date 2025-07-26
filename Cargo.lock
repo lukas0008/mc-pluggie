@@ -336,6 +336,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "mc-player"
+version = "0.1.0"
+dependencies = [
+ "mclib-core",
+ "mclib-network",
+]
+
+[[package]]
 name = "mc-proc"
 version = "0.1.0"
 dependencies = [
@@ -378,6 +386,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "mc-world"
+version = "0.1.0"
+
+[[package]]
+name = "mclib-core"
+version = "0.1.0"
+
+[[package]]
 name = "mclib-network"
 version = "0.1.0"
 dependencies = [
@@ -394,6 +410,14 @@ dependencies = [
  "serde_repr",
  "simdnbt",
  "uuid",
+]
+
+[[package]]
+name = "mclib-world"
+version = "0.1.0"
+dependencies = [
+ "mclib-core",
+ "pluggie",
 ]
 
 [[package]]

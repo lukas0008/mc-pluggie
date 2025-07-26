@@ -1,0 +1,8 @@
+[package]
+name = "mclib-world"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+pluggie = { path = "../../pluggie/pluggie" }
+mclib-core = { path = "../mclib-core" }
